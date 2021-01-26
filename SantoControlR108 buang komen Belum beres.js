@@ -1,4 +1,4 @@
-SANTO.OrbitControls = function ( object, domElement ) {
+SANTO.OrbitControls = function(object, domElement){
 	this.object = object;
 	this.domElement = ( domElement !== undefined ) ? domElement : document;
 	this.enabled = true;
@@ -28,21 +28,22 @@ SANTO.OrbitControls = function ( object, domElement ) {
 	this.position0 = this.object.position.clone();
 	this.zoom0 = this.object.zoom;
 
-	this.getPolarAngle = function () {
+	this.getPolarAngle = 
+		(){
 		return spherical.phi;
 	};
 
-	this.getAzimuthalAngle = function () {
+	this.getAzimuthalAngle = function(){
 		return spherical.theta;
 	};
 
-	this.saveState = function () {
+	this.saveState = function(){
 		scope.target0.copy( scope.target );
 		scope.position0.copy( scope.object.position );
 		scope.zoom0 = scope.object.zoom;
 	};
 
-	this.reset = function () {
+	this.reset = function(){
 		scope.target.copy( scope.target0 );
 		scope.object.position.copy( scope.position0 );
 		scope.object.zoom = scope.zoom0;
@@ -55,7 +56,7 @@ SANTO.OrbitControls = function ( object, domElement ) {
 		state = STATE.NONE;
 	};
 
-	this.update = function () {
+	this.update = function(){
 
 		var offset = new SANTO.Vector3();
 		var quat = new SANTO.Quaternion().setFromUnitVectors( object.up, new SANTO.Vector3( 0, 1, 0 ) );
@@ -64,7 +65,7 @@ SANTO.OrbitControls = function ( object, domElement ) {
 		var lastPosition = new SANTO.Vector3();
 		var lastQuaternion = new SANTO.Quaternion();
 
-		return function update() {
+		return function update(){
 
 			var position = scope.object.position;
 
@@ -166,7 +167,7 @@ SANTO.OrbitControls = function ( object, domElement ) {
 
 	}();
 
-	this.dispose = function () {
+	this.dispose = function(){
 
 		scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
 		scope.domElement.removeEventListener( 'mousedown', onMouseDown, false );
@@ -230,21 +231,21 @@ SANTO.OrbitControls = function ( object, domElement ) {
 	var dollyEnd = new SANTO.Vector2();
 	var dollyDelta = new SANTO.Vector2();
 
-	function getAutoRotationAngle() {
+	function getAutoRotationAngle(){
 
 		return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
 
 	}
 
-	function getZoomScale() {
+	function getZoomScale(){
 		return Math.pow( 0.95, scope.zoomSpeed );
 	}
 
-	function rotateLeft( angle ) {
+	function rotateLeft(angle){
 		sphericalDelta.theta -= angle;
 	}
 
-	function rotateUp( angle ) {
+	function rotateUp(angle){
 		sphericalDelta.phi -= angle;
 	}
 
