@@ -57,7 +57,6 @@ SANTO.OrbitControls = function(object, domElement){
 	};
 
 	this.update = function(){
-
 		var offset = new SANTO.Vector3();
 		var quat = new SANTO.Quaternion().setFromUnitVectors( object.up, new SANTO.Vector3( 0, 1, 0 ) );
 		var quatInverse = quat.clone().inverse();
@@ -66,105 +65,64 @@ SANTO.OrbitControls = function(object, domElement){
 		var lastQuaternion = new SANTO.Quaternion();
 
 		return function update(){
-
 			var position = scope.object.position;
 
 			offset.copy( position ).sub( scope.target );
 			offset.applyQuaternion( quat );
 			spherical.setFromVector3( offset );
 
-			if ( scope.autoRotate && state === STATE.NONE ) {
-
+			if(scope.autoRotate && state === STATE.NONE){
 				rotateLeft( getAutoRotationAngle() );
-
 			}
 
-			if ( scope.enableDamping ) {
+			if(scope.enableDamping ) {
 
 				spherical.theta += sphericalDelta.theta * scope.dampingFactor;
 				spherical.phi += sphericalDelta.phi * scope.dampingFactor;
 
-			} else {
-
+			}else{
 				spherical.theta += sphericalDelta.theta;
 				spherical.phi += sphericalDelta.phi;
-
 			}
 
-			// restrict theta to be between desired limits
-			spherical.theta = Math.max( scope.minAzimuthAngle, Math.min( scope.maxAzimuthAngle, spherical.theta ) );
-
-			// restrict phi to be between desired limits
-			spherical.phi = Math.max( scope.minPolarAngle, Math.min( scope.maxPolarAngle, spherical.phi ) );
-
+			spherical.theta = Math.max(scope.minAzimuthAngle, Math.min(scope.maxAzimuthAngle, spherical.theta));
+			spherical.phi = Math.max(scope.minPolarAngle, Math.min(scope.maxPolarAngle, spherical.phi));
 			spherical.makeSafe();
-
-
 			spherical.radius *= scale;
 
-			// restrict radius to be between desired limits
-			spherical.radius = Math.max( scope.minDistance, Math.min( scope.maxDistance, spherical.radius ) );
+			spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
 
-			// move target to panned location
-
-			if ( scope.enableDamping === true ) {
-
+			if(scope.enableDamping === true){
 				scope.target.addScaledVector( panOffset, scope.dampingFactor );
-
-			} else {
-
-				scope.target.add( panOffset );
-
+			}else{
+				scope.target.add(panOffset);
 			}
-
-			offset.setFromSpherical( spherical );
-
-			// rotate offset back to "camera-up-vector-is-up" space
-			offset.applyQuaternion( quatInverse );
-
-			position.copy( scope.target ).add( offset );
-
-			scope.object.lookAt( scope.target );
-
-			if ( scope.enableDamping === true ) {
-
-				sphericalDelta.theta *= ( 1 - scope.dampingFactor );
-				sphericalDelta.phi *= ( 1 - scope.dampingFactor );
-
-				panOffset.multiplyScalar( 1 - scope.dampingFactor );
-
-			} else {
-
-				sphericalDelta.set( 0, 0, 0 );
-
-				panOffset.set( 0, 0, 0 );
-
+			offset.setFromSpherical(spherical);
+			offset.applyQuaternion(quatInverse);
+			position.copy(scope.target).add(offset);
+			scope.object.lookAt(scope.target);
+			if(scope.enableDamping === true){
+				sphericalDelta.theta *= (1 - scope.dampingFactor);
+				sphericalDelta.phi *= (1 - scope.dampingFactor);
+				panOffset.multiplyScalar(1 - scope.dampingFactor);
+			}else{
+				sphericalDelta.set(0,0,0);
+				panOffset.set(0,0,0);
 			}
 
 			scale = 1;
 
-			// update condition is:
-			// min(camera displacement, camera rotation in radians)^2 > EPS
-			// using small-angle approximation cos(x/2) = 1 - x^2 / 8
-
-			if ( zoomChanged ||
+			if(zoomChanged ||
 				lastPosition.distanceToSquared( scope.object.position ) > EPS ||
 				8 * ( 1 - lastQuaternion.dot( scope.object.quaternion ) ) > EPS ) {
-
 				scope.dispatchEvent( changeEvent );
-
 				lastPosition.copy( scope.object.position );
 				lastQuaternion.copy( scope.object.quaternion );
 				zoomChanged = false;
-
 				return true;
-
 			}
-
 			return false;
-
 		};
-
 	}();
 
 	this.dispose = function(){
@@ -181,14 +139,7 @@ SANTO.OrbitControls = function(object, domElement){
 		document.removeEventListener( 'mouseup', onMouseUp, false );
 
 		window.removeEventListener( 'keydown', onKeyDown, false );
-
-		//scope.dispatchEvent( { type: 'dispose' } ); // should this be added here?
-
 	};
-
-	//
-	// internals
-	//
 
 	var scope = this;
 
@@ -208,10 +159,7 @@ SANTO.OrbitControls = function(object, domElement){
 	};
 
 	var state = STATE.NONE;
-
 	var EPS = 0.000001;
-
-	// current position in spherical coordinates
 	var spherical = new SANTO.Spherical();
 	var sphericalDelta = new SANTO.Spherical();
 
@@ -232,9 +180,7 @@ SANTO.OrbitControls = function(object, domElement){
 	var dollyDelta = new SANTO.Vector2();
 
 	function getAutoRotationAngle(){
-
 		return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
-
 	}
 
 	function getZoomScale(){
@@ -249,56 +195,34 @@ SANTO.OrbitControls = function(object, domElement){
 		sphericalDelta.phi -= angle;
 	}
 
-	var panLeft = function () {
-
+	var panLeft = function(){
 		var v = new SANTO.Vector3();
-
-		return function panLeft( distance, objectMatrix ) {
-
-			v.setFromMatrixColumn( objectMatrix, 0 ); // get X column of objectMatrix
-			v.multiplyScalar( - distance );
-
-			panOffset.add( v );
-
+		return function panLeft(distance, objectMatrix){
+			v.setFromMatrixColumn(objectMatrix, 0);
+			v.multiplyScalar( - distance);
+			panOffset.add(v);
 		};
-
 	}();
 
-	var panUp = function () {
-
+	var panUp = function() {
 		var v = new SANTO.Vector3();
-
-		return function panUp( distance, objectMatrix ) {
-
-			if ( scope.screenSpacePanning === true ) {
-
-				v.setFromMatrixColumn( objectMatrix, 1 );
-
+		return function panUp(distance, objectMatrix){
+			if(scope.screenSpacePanning === true){
+				v.setFromMatrixColumn( objectMatrix, 1);
 			} else {
-
-				v.setFromMatrixColumn( objectMatrix, 0 );
-				v.crossVectors( scope.object.up, v );
-
+				v.setFromMatrixColumn(objectMatrix, 0);
+				v.crossVectors(scope.object.up, v);
 			}
-
-			v.multiplyScalar( distance );
-
-			panOffset.add( v );
-
+			v.multiplyScalar(distance);
+			panOffset.add(v);
 		};
-
 	}();
 
-	// deltaX and deltaY are in pixels; right and down are positive
-	var pan = function () {
-
+	var pan = function() {
 		var offset = new SANTO.Vector3();
-
-		return function pan( deltaX, deltaY ) {
-
+		return function pan(deltaX, deltaY){
 			var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-
-			if ( scope.object.isPerspectiveCamera ) {
+			if(scope.object.isPerspectiveCamera){
 
 				// perspective
 				var position = scope.object.position;
@@ -312,18 +236,12 @@ SANTO.OrbitControls = function(object, domElement){
 				panLeft( 2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix );
 				panUp( 2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix );
 
-			} else if ( scope.object.isOrthographicCamera ) {
-
-				// orthographic
-				panLeft( deltaX * ( scope.object.right - scope.object.left ) / scope.object.zoom / element.clientWidth, scope.object.matrix );
-				panUp( deltaY * ( scope.object.top - scope.object.bottom ) / scope.object.zoom / element.clientHeight, scope.object.matrix );
-
-			} else {
-
-				// camera neither orthographic nor perspective
-				console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.' );
+			}else if(scope.object.isOrthographicCamera){
+				panLeft(deltaX * (scope.object.right - scope.object.left) / scope.object.zoom / element.clientWidth, scope.object.matrix);
+				panUp(deltaY * (scope.object.top - scope.object.bottom) / scope.object.zoom / element.clientHeight, scope.object.matrix);
+			}else{
+				console.warn('WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.');
 				scope.enablePan = false;
-
 			}
 
 		};
@@ -332,11 +250,11 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function dollyIn( dollyScale ) {
 
-		if ( scope.object.isPerspectiveCamera ) {
+		if(scope.object.isPerspectiveCamera ) {
 
 			scale /= dollyScale;
 
-		} else if ( scope.object.isOrthographicCamera ) {
+		} else if(scope.object.isOrthographicCamera ) {
 
 			scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom * dollyScale ) );
 			scope.object.updateProjectionMatrix();
@@ -351,65 +269,37 @@ SANTO.OrbitControls = function(object, domElement){
 
 	}
 
-	function dollyOut( dollyScale ) {
-
-		if ( scope.object.isPerspectiveCamera ) {
-
+	function dollyOut(dollyScale){
+		if(scope.object.isPerspectiveCamera){
 			scale *= dollyScale;
-
-		} else if ( scope.object.isOrthographicCamera ) {
-
-			scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom / dollyScale ) );
+		} else if(scope.object.isOrthographicCamera){
+			scope.object.zoom = Math.max(scope.minZoom, Math.min(scope.maxZoom, scope.object.zoom / dollyScale));
 			scope.object.updateProjectionMatrix();
 			zoomChanged = true;
-
 		} else {
-
-			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+			console.warn('WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.');
 			scope.enableZoom = false;
-
 		}
-
 	}
 
-	//
-	// event callbacks - update the object state
-	//
-
-	function handleMouseDownRotate( event ) {
-
-		rotateStart.set( event.clientX, event.clientY );
-
+	function handleMouseDownRotate(event){
+		rotateStart.set(event.clientX, event.clientY);
 	}
-
-	function handleMouseDownDolly( event ) {
-
-		dollyStart.set( event.clientX, event.clientY );
-
+	function handleMouseDownDolly(event){
+		dollyStart.set(event.clientX, event.clientY);
 	}
-
-	function handleMouseDownPan( event ) {
-
-		panStart.set( event.clientX, event.clientY );
-
+	function handleMouseDownPan(event){
+		panStart.set(event.clientX, event.clientY);
 	}
 
 	function handleMouseMoveRotate( event ) {
-
 		rotateEnd.set( event.clientX, event.clientY );
-
 		rotateDelta.subVectors( rotateEnd, rotateStart ).multiplyScalar( scope.rotateSpeed );
-
 		var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-
 		rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientHeight ); // yes, height
-
 		rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight );
-
 		rotateStart.copy( rotateEnd );
-
 		scope.update();
-
 	}
 
 	function handleMouseMoveDolly( event ) {
@@ -418,11 +308,11 @@ SANTO.OrbitControls = function(object, domElement){
 
 		dollyDelta.subVectors( dollyEnd, dollyStart );
 
-		if ( dollyDelta.y > 0 ) {
+		if(dollyDelta.y > 0 ) {
 
 			dollyIn( getZoomScale() );
 
-		} else if ( dollyDelta.y < 0 ) {
+		} else if(dollyDelta.y < 0 ) {
 
 			dollyOut( getZoomScale() );
 
@@ -456,11 +346,11 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function handleMouseWheel( event ) {
 
-		if ( event.deltaY < 0 ) {
+		if(event.deltaY < 0 ) {
 
 			dollyOut( getZoomScale() );
 
-		} else if ( event.deltaY > 0 ) {
+		} else if(event.deltaY > 0 ) {
 
 			dollyIn( getZoomScale() );
 
@@ -498,7 +388,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 		}
 
-		if ( needsUpdate ) {
+		if(needsUpdate ) {
 
 			// prevent the browser from scrolling on cursor keys
 			event.preventDefault();
@@ -512,7 +402,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function handleTouchStartRotate( event ) {
 
-		if ( event.touches.length == 1 ) {
+		if(event.touches.length == 1 ) {
 
 			rotateStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
@@ -529,7 +419,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function handleTouchStartPan( event ) {
 
-		if ( event.touches.length == 1 ) {
+		if(event.touches.length == 1 ) {
 
 			panStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
@@ -557,23 +447,23 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function handleTouchStartDollyPan( event ) {
 
-		if ( scope.enableZoom ) handleTouchStartDolly( event );
+		if(scope.enableZoom ) handleTouchStartDolly( event );
 
-		if ( scope.enablePan ) handleTouchStartPan( event );
+		if(scope.enablePan ) handleTouchStartPan( event );
 
 	}
 
 	function handleTouchStartDollyRotate( event ) {
 
-		if ( scope.enableZoom ) handleTouchStartDolly( event );
+		if(scope.enableZoom ) handleTouchStartDolly( event );
 
-		if ( scope.enableRotate ) handleTouchStartRotate( event );
+		if(scope.enableRotate ) handleTouchStartRotate( event );
 
 	}
 
 	function handleTouchMoveRotate( event ) {
 
-		if ( event.touches.length == 1 ) {
+		if(event.touches.length == 1 ) {
 
 			rotateEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
@@ -600,7 +490,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function handleTouchMovePan( event ) {
 
-		if ( event.touches.length == 1 ) {
+		if(event.touches.length == 1 ) {
 
 			panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
@@ -640,17 +530,17 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function handleTouchMoveDollyPan( event ) {
 
-		if ( scope.enableZoom ) handleTouchMoveDolly( event );
+		if(scope.enableZoom ) handleTouchMoveDolly( event );
 
-		if ( scope.enablePan ) handleTouchMovePan( event );
+		if(scope.enablePan ) handleTouchMovePan( event );
 
 	}
 
 	function handleTouchMoveDollyRotate( event ) {
 
-		if ( scope.enableZoom ) handleTouchMoveDolly( event );
+		if(scope.enableZoom ) handleTouchMoveDolly( event );
 
-		if ( scope.enableRotate ) handleTouchMoveRotate( event );
+		if(scope.enableRotate ) handleTouchMoveRotate( event );
 
 	}
 
@@ -666,7 +556,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function onMouseDown( event ) {
 
-		if ( scope.enabled === false ) return;
+		if(scope.enabled === false ) return;
 
 		// Prevent the browser from scrolling.
 
@@ -685,9 +575,9 @@ SANTO.OrbitControls = function(object, domElement){
 
 					case SANTO.MOUSE.ROTATE:
 
-						if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+						if(event.ctrlKey || event.metaKey || event.shiftKey ) {
 
-							if ( scope.enablePan === false ) return;
+							if(scope.enablePan === false ) return;
 
 							handleMouseDownPan( event );
 
@@ -695,7 +585,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 						} else {
 
-							if ( scope.enableRotate === false ) return;
+							if(scope.enableRotate === false ) return;
 
 							handleMouseDownRotate( event );
 
@@ -707,9 +597,9 @@ SANTO.OrbitControls = function(object, domElement){
 
 					case SANTO.MOUSE.PAN:
 
-						if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+						if(event.ctrlKey || event.metaKey || event.shiftKey ) {
 
-							if ( scope.enableRotate === false ) return;
+							if(scope.enableRotate === false ) return;
 
 							handleMouseDownRotate( event );
 
@@ -717,7 +607,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 						} else {
 
-							if ( scope.enablePan === false ) return;
+							if(scope.enablePan === false ) return;
 
 							handleMouseDownPan( event );
 
@@ -742,7 +632,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 					case SANTO.MOUSE.DOLLY:
 
-						if ( scope.enableZoom === false ) return;
+						if(scope.enableZoom === false ) return;
 
 						handleMouseDownDolly( event );
 
@@ -765,7 +655,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 					case SANTO.MOUSE.ROTATE:
 
-						if ( scope.enableRotate === false ) return;
+						if(scope.enableRotate === false ) return;
 
 						handleMouseDownRotate( event );
 
@@ -775,7 +665,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 					case SANTO.MOUSE.PAN:
 
-						if ( scope.enablePan === false ) return;
+						if(scope.enablePan === false ) return;
 
 						handleMouseDownPan( event );
 
@@ -793,7 +683,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 		}
 
-		if ( state !== STATE.NONE ) {
+		if(state !== STATE.NONE ) {
 
 			document.addEventListener( 'mousemove', onMouseMove, false );
 			document.addEventListener( 'mouseup', onMouseUp, false );
@@ -806,7 +696,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function onMouseMove( event ) {
 
-		if ( scope.enabled === false ) return;
+		if(scope.enabled === false ) return;
 
 		event.preventDefault();
 
@@ -814,7 +704,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 			case STATE.ROTATE:
 
-				if ( scope.enableRotate === false ) return;
+				if(scope.enableRotate === false ) return;
 
 				handleMouseMoveRotate( event );
 
@@ -822,7 +712,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 			case STATE.DOLLY:
 
-				if ( scope.enableZoom === false ) return;
+				if(scope.enableZoom === false ) return;
 
 				handleMouseMoveDolly( event );
 
@@ -830,7 +720,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 			case STATE.PAN:
 
-				if ( scope.enablePan === false ) return;
+				if(scope.enablePan === false ) return;
 
 				handleMouseMovePan( event );
 
@@ -842,7 +732,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function onMouseUp( event ) {
 
-		if ( scope.enabled === false ) return;
+		if(scope.enabled === false ) return;
 
 		handleMouseUp( event );
 
@@ -857,7 +747,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function onMouseWheel( event ) {
 
-		if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
+		if(scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -872,7 +762,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function onKeyDown( event ) {
 
-		if ( scope.enabled === false || scope.enableKeys === false || scope.enablePan === false ) return;
+		if(scope.enabled === false || scope.enableKeys === false || scope.enablePan === false ) return;
 
 		handleKeyDown( event );
 
@@ -880,7 +770,7 @@ SANTO.OrbitControls = function(object, domElement){
 
 	function onTouchStart( event ) {
 
-		if ( scope.enabled === false ) return;
+		if(scope.enabled === false ) return;
 
 		event.preventDefault();
 
@@ -888,185 +778,119 @@ SANTO.OrbitControls = function(object, domElement){
 
 			case 1:
 
-				switch ( scope.touches.ONE ) {
-
+				switch(scope.touches.ONE){
 					case SANTO.TOUCH.ROTATE:
-
-						if ( scope.enableRotate === false ) return;
-
-						handleTouchStartRotate( event );
-
+						if(scope.enableRotate === false) return;
+						handleTouchStartRotate(event);
 						state = STATE.TOUCH_ROTATE;
-
 						break;
 
 					case SANTO.TOUCH.PAN:
-
-						if ( scope.enablePan === false ) return;
-
-						handleTouchStartPan( event );
-
+						if(scope.enablePan === false) return;
+						handleTouchStartPan(event);
 						state = STATE.TOUCH_PAN;
-
 						break;
 
 					default:
-
 						state = STATE.NONE;
-
 				}
-
 				break;
 
 			case 2:
-
-				switch ( scope.touches.TWO ) {
-
+				switch(scope.touches.TWO){
 					case SANTO.TOUCH.DOLLY_PAN:
-
-						if ( scope.enableZoom === false && scope.enablePan === false ) return;
-
-						handleTouchStartDollyPan( event );
-
+						if(scope.enableZoom === false && scope.enablePan === false ) return;
+						handleTouchStartDollyPan(event);
 						state = STATE.TOUCH_DOLLY_PAN;
-
 						break;
 
 					case SANTO.TOUCH.DOLLY_ROTATE:
-
-						if ( scope.enableZoom === false && scope.enableRotate === false ) return;
-
-						handleTouchStartDollyRotate( event );
-
+						if(scope.enableZoom === false && scope.enableRotate === false) return;
+						handleTouchStartDollyRotate(event);
 						state = STATE.TOUCH_DOLLY_ROTATE;
-
 						break;
 
 					default:
-
 						state = STATE.NONE;
-
 				}
-
 				break;
 
 			default:
-
 				state = STATE.NONE;
-
 		}
 
-		if ( state !== STATE.NONE ) {
-
-			scope.dispatchEvent( startEvent );
-
+		if(state !== STATE.NONE){
+			scope.dispatchEvent(startEvent);
 		}
-
 	}
 
-	function onTouchMove( event ) {
-
-		if ( scope.enabled === false ) return;
+	function onTouchMove(event){
+		if(scope.enabled === false) return;
 
 		event.preventDefault();
 		event.stopPropagation();
 
-		switch ( state ) {
-
+		switch(state){
 			case STATE.TOUCH_ROTATE:
-
-				if ( scope.enableRotate === false ) return;
-
+				if(scope.enableRotate === false) return;
 				handleTouchMoveRotate( event );
-
 				scope.update();
-
 				break;
 
 			case STATE.TOUCH_PAN:
-
-				if ( scope.enablePan === false ) return;
-
+				if(scope.enablePan === false) return;
 				handleTouchMovePan( event );
-
 				scope.update();
-
 				break;
 
 			case STATE.TOUCH_DOLLY_PAN:
-
-				if ( scope.enableZoom === false && scope.enablePan === false ) return;
-
+				if(scope.enableZoom === false && scope.enablePan === false) return;
 				handleTouchMoveDollyPan( event );
-
 				scope.update();
-
 				break;
 
 			case STATE.TOUCH_DOLLY_ROTATE:
-
-				if ( scope.enableZoom === false && scope.enableRotate === false ) return;
-
-				handleTouchMoveDollyRotate( event );
-
+				if(scope.enableZoom === false && scope.enableRotate === false) return;
+				handleTouchMoveDollyRotate(event);
 				scope.update();
-
 				break;
 
 			default:
-
 				state = STATE.NONE;
-
 		}
-
 	}
 
-	function onTouchEnd( event ) {
-
-		if ( scope.enabled === false ) return;
-
-		handleTouchEnd( event );
-
-		scope.dispatchEvent( endEvent );
-
+	function onTouchEnd(event){
+		if(scope.enabled === false) return;
+		handleTouchEnd(event);
+		scope.dispatchEvent(endEvent);
 		state = STATE.NONE;
-
 	}
 
-	function onContextMenu( event ) {
-		if ( scope.enabled === false ) return;
+	function onContextMenu(event){
+		if(scope.enabled === false) return;
 		event.preventDefault();
 	}
-
-	//
-
-	scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
-
-	scope.domElement.addEventListener( 'mousedown', onMouseDown, false );
-	scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
-
-	scope.domElement.addEventListener( 'touchstart', onTouchStart, false );
-	scope.domElement.addEventListener( 'touchend', onTouchEnd, false );
-	scope.domElement.addEventListener( 'touchmove', onTouchMove, false );
-
-	window.addEventListener( 'keydown', onKeyDown, false );
-
+	scope.domElement.addEventListener('contextmenu', onContextMenu, false);
+	scope.domElement.addEventListener('mousedown', onMouseDown, false);
+	scope.domElement.addEventListener('wheel', onMouseWheel, false);
+	scope.domElement.addEventListener('touchstart', onTouchStart, false);
+	scope.domElement.addEventListener('touchend', onTouchEnd, false);
+	scope.domElement.addEventListener('touchmove', onTouchMove, false);
+	window.addEventListener('keydown', onKeyDown, false);
 	this.update();
-
 };
 
-SANTO.OrbitControls.prototype = Object.create( SANTO.EventDispatcher.prototype );
+SANTO.OrbitControls.prototype = Object.create(SANTO.EventDispatcher.prototype);
 SANTO.OrbitControls.prototype.constructor = SANTO.OrbitControls;
 
-SANTO.MapControls = function ( object, domElement ) {
-	SANTO.OrbitControls.call( this, object, domElement );
-
-	this.mouseButtons.LEFT = SANTO.MOUSE.PAN;
-	this.mouseButtons.RIGHT = SANTO.MOUSE.ROTATE;
-
-	this.touches.ONE = SANTO.TOUCH.PAN;
-	this.touches.TWO = SANTO.TOUCH.DOLLY_ROTATE;
+SANTO.MapControls = function(object, domElement){
+SANTO.OrbitControls.call(this, object, domElement);
+this.mouseButtons.LEFT = SANTO.MOUSE.PAN;
+this.mouseButtons.RIGHT = SANTO.MOUSE.ROTATE;
+this.touches.ONE = SANTO.TOUCH.PAN;
+this.touches.TWO = SANTO.TOUCH.DOLLY_ROTATE;
 };
 
-SANTO.MapControls.prototype = Object.create( SANTO.EventDispatcher.prototype );
+SANTO.MapControls.prototype = Object.create(SANTO.EventDispatcher.prototype);
 SANTO.MapControls.prototype.constructor = SANTO.MapControls;
